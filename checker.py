@@ -1,10 +1,9 @@
-from RestrictedPython import compile_restricted
+from RestrictedPython import compile_restricted_exec
 from RestrictedPython.Guards import safe_builtins
 from RestrictedPython.Guards import guarded_iter_unpack_sequence
 from RestrictedPython.Guards import full_write_guard
 from RestrictedPython.Eval import default_guarded_getiter
-import os
-import builtins
+from RestrictedPython.PrintCollector import PrintCollector
 
 def custom_inplacevar(op, x, y):
   globs = {'x': x, 'y': y}
@@ -23,25 +22,33 @@ def custom_metaclass(name, bases, dict):
 def write(ob):
   return ob
 
-glb = dict(__builtins__=safe_builtins)
-glb['_getiter_'] = default_guarded_getiter
-glb['_iter_unpack_sequence_'] = guarded_iter_unpack_sequence
-glb['_inplacevar_'] = custom_inplacevar
-glb['_getitem_'] = getattr
-glb['_write_'] = write
-glb['__metaclass__'] = type
-glb['__name__'] = __name__
+def get_globals():
+  glb = dict(__builtins__=safe_builtins)
+  glb['_getiter_'] = default_guarded_getiter
+  glb['_iter_unpack_sequence_'] = guarded_iter_unpack_sequence
+  glb['_inplacevar_'] = custom_inplacevar
+  glb['_getitem_'] = getattr
+  glb['_write_'] = write
+  glb['__metaclass__'] = type
+  glb['__name__'] = __name__
+  glb['_print_'] = PrintCollector
+  glb['__import__'] = write
+  glb['__builtins__']['__import__'] = __import__
+  return glb
 
 class check:
   def __init__(self, correction, file):
     self.score = 0
-    try:
+    self.printed = ''
+    compiled = compile_restricted_exec(file, '<string>')
+    if not compiled.errors:
       code = {}
-      byte_code = compile_restricted(file, '<string>', 'exec')
-      exec(byte_code, glb, code)
-      self.errors = [i for i in (self.test(correction, m, code) for m in dir(correction) if not m.startswith('__')) if i]
-    except SyntaxError as e:
-      self.errors = [e]
+      exec(compiled.code, get_globals(), code)
+      self.errors = [i for i in (self.test(correction, m, code) for m in dir(correction) if not m.startswith('_')) if i]
+      if '_print' in code:
+        self.printed = code['_print']()[:-1]
+    else:
+      self.errors = [compiled.errors]
     
 
   def test(self, correction, func, code):

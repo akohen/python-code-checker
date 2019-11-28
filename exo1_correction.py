@@ -2,6 +2,9 @@ from checker import check
 import os
 
 class exo1:
+  def _imports(self):
+    return 12
+
   def compiles(self, code):
     return 1
 
@@ -36,3 +39,4 @@ for student_submission in os.listdir('students'):
   correction2 = check(exo2, source_code)
   print('{} - Exercise 1 - {}'.format(student_submission[:-3], correction))
   print('{} - Exercise 2 - {}'.format(student_submission[:-3], correction2))
+  print(correction.printed)
