@@ -26,6 +26,8 @@ import os
 from checker import check
 
 class myCorrection:
+  _allowed_imports = ['numpy']
+
   def basic_addition(self, code):
     assert code['add'](2,3) == 5
     return 1
@@ -35,6 +37,13 @@ correction = check(myCorrection, source_code)
 print(correction.score)
 print(correction.printed)
 print(correction.errors)
+print(correction.tests)
 ```
 
-`correction.score` will return the sum of the value of the tests successfully passed, `correction.printed` the results of all the calls to `print` in the code and `correction.errors` a list of errors returned and tests failed.
+- `correction.score` will return the sum of the value of the tests successfully passed
+- `correction.printed` the results of all the calls to `print` in the code
+- `correction.errors` a list of compilation errors
+- `correction.tests` returns a list of all tests run, with their results and eventual reasons for failure
+- `correction.passed` and `correction.failed` will only return the list of passed and failed tests
+- The `_allowed_imports` attribute allows you to specify a list of modules that can be imported.
+
