@@ -51,7 +51,6 @@ def get_globals(correction):
   glb['__metaclass__'] = type
   glb['__name__'] = __name__
   glb['_print_'] = PrintCollector
-  glb['__import__'] = write
   glb['__builtins__']['__import__'] = custom_import(correction)
   return glb
 
