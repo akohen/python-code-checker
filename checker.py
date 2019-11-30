@@ -13,18 +13,6 @@ def custom_inplacevar(op, x, y):
   exec('x{}y'.format(op),globs)
   return globs['x']
 
-def custom_metaclass(name, bases, dict):
-    for k in dict.items():
-        if k.endswith('__roles__') and k[:len('__roles__')] not in dict:
-            raise SecurityException("Can't override security: %s" % k)
-    ob = type(name, bases, dict)
-    ob.__allow_access_to_unprotected_subobjects__ = 1
-    ob._guarded_writes = 1
-    return ob
-
-def write(ob):
-  return ob
-
 def custom_import(correction):
   def guarded_import(mname, globals=None, locals=None, fromlist=None, level=None):
     if fromlist is None:
@@ -47,7 +35,7 @@ def get_globals(correction):
   glb['_iter_unpack_sequence_'] = guarded_iter_unpack_sequence
   glb['_inplacevar_'] = custom_inplacevar
   glb['_getitem_'] = getattr
-  glb['_write_'] = write
+  glb['_write_'] = lambda x : x
   glb['__metaclass__'] = type
   glb['__name__'] = __name__
   glb['_print_'] = PrintCollector
